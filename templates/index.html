@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Files | {{ header|replace('\\', '/') }}</title>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>{{ header|replace('\\', '/') }}</h1>
+        <ul>
+            {% for file in files %}
+                <li>
+                  {% if not file.is_image %}
+                    {% if file.name.endswith('/') %}
+                      <img src="{{ url_for('static', filename='folder.png') }}" alt="">
+                    {% else %}
+                      <img src="{{ url_for('static', filename='file.png') }}" alt="">
+                      {% if file.is_video %}
+                        <button class="view-button" onclick="playVideo('{{ url_for('video', filename=unquote(path) + '/' + file.name) }}')">View</button>
+                      {% endif %}
+                    {% endif %}
+                  {% else %}
+                    <a href="{{ url_for('thumbnail', filename=path + '/' + file.name) }}"><img src="{{ url_for('thumbnail', filename=path + '/' + file.name) }}" alt=""></a>
+                  {% endif %}
+                  <span class="file-name">
+                    <a href="{% if file.name.endswith('/') %}{{ url_for('index', path=path+file.name) }}{% else %}{{ url_for('download', filename=path + '/' + file.name) }}{% endif %}">{{ file.name }}</a>
+                  </span>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="parent-dir">
+            <a href="{{ url_for('index', path=parent_dir) }}">Parent Directory</a>
+        </div>
+        <div class="form-container">
+          <form method="POST" action="{{ url_for('upload', dir=path) }}" enctype="multipart/form-data">
+            <input type="file" name="file" id="file-input" onchange="updateFileName()">
+            <label for="file-input" class="upload-button" id="file-label">Select file</label>
+            <button type="submit" class="upload-button">Upload</button>
+          </form>
+          <span id="selected-file-name"></span>
+        </div>
+        <script>
+        function updateFileName() {
+          var input = document.getElementById('file-input');
+          var label = document.getElementById('file-label');
+          var fileName = input.files[0].name;
+          label.innerHTML = fileName;
+        }
+        </script>
+    </div>
+    <div id="video-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeVideo()">&times;</span>
+            <video id="video-player" controls></video>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
